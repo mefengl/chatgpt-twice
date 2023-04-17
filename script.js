@@ -1,13 +1,34 @@
 // ==UserScript==
 // @name         chatgpt twice
 // @namespace    https://github.com/mefengl
-// @version      0.0.5
+// @version      0.0.6
 // @description  ask question twice!
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=openai.com
 // @author       mefengl
 // @match        https://chat.openai.com/*
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=openai.com
 // @grant        none
 // @license      MIT
+
+// @name:en      ChatGPT Twice
+// @description:en Ask question twice!
+// @name:zh-CN   聊天GPT两次
+// @description:zh-CN 提问两次！
+// @name:es      ChatGPT Dos veces
+// @description:es ¡Haz la pregunta dos veces!
+// @name:hi      चैटजीपीटी दो बार
+// @description:hi सवाल दो बार पूछें!
+// @name:ar      ChatGPT مرتين
+// @description:ar اطرح السؤال مرتين!
+// @name:pt      ChatGPT Duas vezes
+// @description:pt Faça a pergunta duas vezes!
+// @name:ru      ChatGPT Дважды
+// @description:ru Задайте вопрос дважды!
+// @name:ja      ChatGPT 2回
+// @description:ja 質問を2回行う！
+// @name:de      ChatGPT Zweimal
+// @description:de Stelle die Frage zweimal!
+// @name:fr      ChatGPT Deux fois
+// @description:fr Posez la question deux fois !
 // ==/UserScript==
 (() => {
   var __async = (__this, __arguments, generator) => {
@@ -131,6 +152,35 @@
       }, 1e3);
     });
   }
+  function setListener(key = "prompt_texts") {
+    let last_trigger_time = +/* @__PURE__ */ new Date();
+    if (location.href.includes("chat.openai")) {
+      GM_addValueChangeListener(key, (name, old_value, new_value) => __async(this, null, function* () {
+        if (+/* @__PURE__ */ new Date() - last_trigger_time < 500) {
+          return;
+        }
+        last_trigger_time = +/* @__PURE__ */ new Date();
+        setTimeout(() => __async(this, null, function* () {
+          const prompt_texts = new_value;
+          if (prompt_texts.length > 0) {
+            let firstTime = true;
+            while (prompt_texts.length > 0) {
+              if (!firstTime) {
+                yield new Promise((resolve) => setTimeout(resolve, 2e3));
+              }
+              if (!firstTime && chatgpt.isGenerating()) {
+                continue;
+              }
+              firstTime = false;
+              const prompt_text = prompt_texts.shift() || "";
+              chatgpt.send(prompt_text);
+            }
+          }
+        }), 0);
+        GM_setValue(key, []);
+      }));
+    }
+  }
   var chatgpt = {
     getTextarea,
     getSubmitButton,
@@ -144,7 +194,8 @@
     regenerate,
     onSend,
     isGenerating,
-    waitForIdle
+    waitForIdle,
+    setListener
   };
   var chatgpt_default = chatgpt;
 
